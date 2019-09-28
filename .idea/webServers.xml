@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3ebbaffc-2f07-40f7-91fa-5aa2e19e917c" name="ldareg" url="http://162.105.88.93">
+        <fileTransfer host="162.105.88.93" port="22" rootFolder="/home1/yk" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
