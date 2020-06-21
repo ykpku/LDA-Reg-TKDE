@@ -7,25 +7,45 @@ import sys
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 from utilities.csv_utility import CsvUtility
 from params import LDAP, MOVIEP, MIMICP
+from pre_models.build_wikipedia_data import get_filter_data
 
 
 class LdaTools(object):
-    def __init__(self, doc_path=LDAP.cprpus_path, corpus_file=LDAP.corpus_file, topic_num=LDAP.num_topic, PLSA=LDAP.plsa):
+    def __init__(self, doc_path=LDAP.cprpus_path, corpus_file=LDAP.corpus_file, topic_num=LDAP.num_topic, PLSA=LDAP.plsa, corpus_percent=LDAP.corpus_percent):
         self.doc_path = doc_path
         self.topic_num = topic_num
         self.dictionary = []
         self.lda_model = None
         self.PLSA = PLSA
         self.corpus_file = corpus_file
+        self.corpus_percent = corpus_percent
 
     def train_lda(self, passes=5):
         selected_docs = pd.read_csv(self.doc_path+self.corpus_file, header=None, index_col=[0]).values
+        size = int(len(selected_docs) * self.corpus_percent)
+        selected_docs = selected_docs[:size]
         texts = [[word for word in doc[0].split(' ')] for doc in selected_docs]
         self.dictionary = corpora.Dictionary(texts)
         self.dictionary.save_as_text(self.doc_path+'available_words_in_literature.csv')
         # print self.dictionary
         corpus = [self.dictionary.doc2bow(text) for text in texts]
         print 'number of docs:', len(corpus)
+        if self.PLSA:
+            alpha_str = 'asymmetric'
+        else:
+            alpha_str = 'auto'
+        self.lda_model = models.LdaModel(corpus, alpha=alpha_str, id2word=self.dictionary, num_topics=self.topic_num, passes=passes)
+        print 'lda training end.'
+
+    def train_wiki_lda(self, passes=5):
+        texts = get_filter_data(self.doc_path)
+        size = int(len(texts) * self.corpus_percent)
+        texts = texts[:size]
+        self.dictionary = corpora.Dictionary(texts)
+        self.dictionary.save_as_text(self.doc_path + 'available_words_in_wiki'+str(self.corpus_percent)+'.csv')
+        # print self.dictionary
+        corpus = [self.dictionary.doc2bow(text) for text in texts]
+        print 'number of docs in wiki:', len(corpus)
         if self.PLSA:
             alpha_str = 'asymmetric'
         else:
@@ -90,41 +110,70 @@ class LdaTools(object):
             print 'after changing the size of result: ', change_index_result.shape
         return change_index_result
 
-    def save_phi_alpha(self, mimic0_movie1):
+    def save_phi_alpha(self, mimic0_movie1, ):
         plsa=""
+        percent=""
         if self.PLSA:
             plsa = "PLSA"
+        if self.corpus_percent != 1.0:
+            percent = "_" + str(self.corpus_percent)+"percent"
         if mimic0_movie1 == 0:
-            CsvUtility.write_array2csv(self.get_alpha(), self.doc_path, 'MIMIC_alpha_'+str(self.topic_num) + plsa + '.csv')
-            CsvUtility.write_array2csv(self.get_mimic_phi(MIMICP.feature_index_file), self.doc_path, 'MIMIC_phi_'+str(self.topic_num) + plsa + '.csv')
+            CsvUtility.write_array2csv(self.get_alpha(), self.doc_path, 'MIMIC_alpha_'+str(self.topic_num) + plsa + percent + '.csv')
+            CsvUtility.write_array2csv(self.get_mimic_phi(MIMICP.feature_index_file), self.doc_path, 'MIMIC_phi_'+str(self.topic_num) + plsa + percent + '.csv')
+        elif mimic0_movie1 == 1:
+            CsvUtility.write_array2csv(self.get_alpha(), self.doc_path, 'MovieReview_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+            CsvUtility.write_array2csv(self.get_movie_phi(MOVIEP.feature_index_file), self.doc_path, 'MovieReview_phi_' + str(self.topic_num) + plsa + percent + '.csv')
         else:
-            CsvUtility.write_array2csv(self.get_alpha(), self.doc_path, 'MovieReview_alpha_' + str(self.topic_num) + plsa + '.csv')
-            CsvUtility.write_array2csv(self.get_movie_phi(MOVIEP.feature_index_file), self.doc_path, 'MovieReview_phi_' + str(self.topic_num) + plsa + '.csv')
+            CsvUtility.write_array2csv(self.get_alpha(), self.doc_path, 'Wiki_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+            CsvUtility.write_array2csv(self.get_movie_phi(MOVIEP.feature_index_file), self.doc_path, 'Wiki_phi_' + str(self.topic_num) + plsa + percent + '.csv')
 
     def read_mimic_phi_alpha(self):
-        plsa=""
+        plsa = ""
+        percent = ""
         if self.PLSA:
             plsa = "_PLSA"
-        alpha = CsvUtility.read_array_from_csv(self.doc_path, 'alpha_' + str(self.topic_num) + plsa + '.csv')
-        phi = CsvUtility.read_array_from_csv(self.doc_path, 'phi_' + str(self.topic_num) + plsa + '.csv')
+        if self.corpus_percent != 1.0:
+            percent = "_" + str(self.corpus_percent)+"percent"
+        alpha = CsvUtility.read_array_from_csv(self.doc_path, 'MIMIC_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+        phi = CsvUtility.read_array_from_csv(self.doc_path, 'MIMIC_phi_' + str(self.topic_num) + plsa + percent + '.csv')
         return alpha, phi
 
     def read_movie_phi_alpha(self):
         plsa = ""
+        percent = ""
         if self.PLSA:
             plsa = "_PLSA"
-        alpha = CsvUtility.read_array_from_csv(self.doc_path, 'MovieReview_alpha_' + str(self.topic_num) + plsa + '.csv')
-        phi = CsvUtility.read_array_from_csv(self.doc_path, 'MovieReview_phi_' + str(self.topic_num) + plsa + '.csv')
+        if self.corpus_percent != 1.0:
+            percent = "_" + str(self.corpus_percent) + "percent"
+        alpha = CsvUtility.read_array_from_csv(self.doc_path, 'MovieReview_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+        phi = CsvUtility.read_array_from_csv(self.doc_path, 'MovieReview_phi_' + str(self.topic_num) + plsa + percent + '.csv')
+        return alpha, phi
+
+    def read_wiki_phi_alpha(self):
+        plsa = ""
+        percent = ""
+        if self.PLSA:
+            plsa = "_PLSA"
+        if self.corpus_percent != 1.0:
+            percent = "_" + str(self.corpus_percent) + "percent"
+        alpha = CsvUtility.read_array_from_csv(self.doc_path, 'Wiki_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+        phi = CsvUtility.read_array_from_csv(self.doc_path, 'Wiki_phi_' + str(self.topic_num) + plsa + percent + '.csv')
         return alpha, phi
 
     def read_phi_alpha(self):
-        if LDAP.mimic0_movie1 == 0:
+        if LDAP.mimic0_movie1_wiki2 == 0:
             return self.read_mimic_phi_alpha()
-        else:
+        elif LDAP.mimic0_movie1_wiki2 == 1:
             return self.read_movie_phi_alpha()
+        else:
+            return self.read_wiki_phi_alpha()
+
+
 
 if __name__ == '__main__':
-    lt = LdaTools(doc_path=LDAP.cprpus_path, topic_num=LDAP.num_topic, PLSA=LDAP.plsa, corpus_file=LDAP.corpus_file)
-    lt.train_lda()
-    lt.save_phi_alpha(mimic0_movie1=LDAP.mimic0_movie1)
-    print lt.get_alpha()
+    # lt = LdaTools(doc_path=LDAP.cprpus_path, topic_num=LDAP.num_topic, PLSA=LDAP.plsa, corpus_file=LDAP.corpus_file, corpus_percent=LDAP.corpus_percent)
+    # lt.train_wiki_lda()
+    # # lt.train_lda()
+    # lt.save_phi_alpha(mimic0_movie1=LDAP.mimic0_movie1_wiki2)
+    # print lt.get_alpha()
+    pass

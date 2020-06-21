@@ -43,6 +43,22 @@ class CsvUtility(object):
         pd.DataFrame(np_raw).to_csv(os.path.join(csv_path, file_name), index=None, header=None)
 
     @staticmethod
+    def write_norm_array2csv(raw_array, csv_path, file_name, sep=' '):
+        with open(csv_path + '/' + file_name, 'w') as f:
+            for item in raw_array:
+                write_str = sep.join(item) + "\n"
+                f.write(write_str)
+        return
+
+    @staticmethod
+    def read_norm_array_csv(csv_path, file_name, sep=' '):
+        result = []
+        with open(csv_path + '/' + file_name, 'r') as f:
+            for row in f.readlines():  # 将csv 文件中的数据保存到birth_data中
+                result.append([x for x in row.strip().split(sep)])
+        return result
+
+    @staticmethod
     def read_array_from_csv(csv_path, file_name, type='float'):
         re_array = np.array(pd.read_csv(os.path.join(csv_path, file_name), header=None, index_col=None))
         if re_array.shape[0] == 1:
@@ -80,15 +96,16 @@ class CsvUtility(object):
 if __name__ == '__main__':
 
     tests = ["dd", "df3ef", "dfeww"]
-    print(tests)
+    # print(tests)
     # t1 = time.time()
     # s = CsvUtility.read_array_from_csv("/home1/yk/new_mimic_formal_data/", "formal_train_x_seq.csv")
     # t2 = time.time()
     # print(s.shape, t2-t1)
-    CsvUtility.convert_dense_2sparse("/home1/yk/new_mimic_formal_data/", "formal_valid_x_seq.csv", "sparse_formal_valid_x_seq")
-    CsvUtility.convert_dense_2sparse("/home1/yk/new_mimic_formal_data/", "formal_test_x_seq.csv", "sparse_formal_test_x_seq")
+    # CsvUtility.convert_dense_2sparse("/home1/yk/new_mimic_formal_data/", "formal_valid_x_seq.csv", "sparse_formal_valid_x_seq")
+    # CsvUtility.convert_dense_2sparse("/home1/yk/new_mimic_formal_data/", "formal_test_x_seq.csv", "sparse_formal_test_x_seq")
     # t1 = time.time()
     # f = CsvUtility.fast_read_array_from_csv("/home1/yk/new_mimic_formal_data/", "formal_train_x_seq.csv")
     # t2 = time.time()
     # print(len(f), t2 - t1)
     # print(f[0][:10])
+

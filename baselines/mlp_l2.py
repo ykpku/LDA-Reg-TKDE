@@ -13,10 +13,13 @@ sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 from params import MLPP
 from neural_networks.mlp_define import Net
 from com.test import test
-from utilities.metirc_utility import get_accuracy, get_accuracy_gpu
+from utilities.metric_utility import get_accuracy, get_accuracy_gpu
 
 
 def train(train_x, train_y, test_x, test_y):
+    if train_x.ndim == 3:
+        train_x = np.sum(train_x, axis=1, keepdims=False)
+        test_x = np.sum(test_x, axis=1, keepdims=False)
     train_size = train_x.shape[0]
     input_size = train_x.shape[-1]
 
@@ -67,5 +70,5 @@ def train(train_x, train_y, test_x, test_y):
         print 'Epoch [%d/%d], AUC:' % (epoch + 1, MLPP.num_epochs), auc_list[:4], 'ACC:', accuracy_mean, 'Precision:', precision_mean, 'Recall:', recall_mean, 'F1:', f1_mean
         result_epoch.append([epoch + 1, auc_list, accuracy_mean, precision_mean, recall_mean, f1_mean])
 
-    return net, [], result_epoch, np.array(time_epoch)
+    return net, np.array([]), result_epoch, np.array(time_epoch)
 

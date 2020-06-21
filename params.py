@@ -1,3 +1,29 @@
+import os
+
+class Run_Params:
+    def __init__(self):
+
+        self.mimic0_movie1_wiki2 = 0  # 0 for mimic and 1 for movie and 2 for wiki
+        self.onehot0_embedding = 0   # 0 for onehot and 1-5 cbow/skipgram/fastCbow/fastSkipgram/glove
+        self.lm_lda_l2 = 2  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
+        self.gpu = '1'
+        self.save = True
+        self.save_path = "/home1/yk/experiments_TKDE/"
+        self.save_name = "mimic_mlp_ldareg_1layer"
+
+    def show(self):
+        print("Parameters of this run used in this running are as follows:")
+        for item in self.__dict__.items():
+            print("%s: %s" % item)
+        print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of this run:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
+runP = Run_Params()
 
 class MimicParams:
     def __init__(self):
@@ -12,6 +38,14 @@ class MimicParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of mimic data:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
+
 MIMICP = MimicParams()
 # MIMICP.show()
 
@@ -20,9 +54,9 @@ class MovieParams:
     def __init__(self):
 
         self.movie_data_path = "/home1/yk/Movie_Review_data/"
-        self.feature_index_file = "new_word2index.pkl"   # for training lda
+        self.feature_index_file = self.movie_data_path + "new_word2index.pkl"   # for training lda
         self.seq_num = 25
-        self.train_percent = 0.8
+        self.train_percent = 0.4
         self.num_words = 5229
 
     def show(self):
@@ -30,6 +64,13 @@ class MovieParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of movie data:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 MOVIEP = MovieParams()
 # MP.show()
 
@@ -38,7 +79,7 @@ class EmbeddingParams:
     def __init__(self):
         names = ['embedding', 'embedding_skipgram', 'fasttext', 'fasttext_skipgram', 'glove']
         self.embedding_type = names[runP.onehot0_embedding - 1]   # embedding/embedding_skipgram/fasttext/fasttext_skipgram/glove
-        self.veclen = 200
+        self.veclen = 500
         self.window = 50
 
     def show(self):
@@ -46,6 +87,13 @@ class EmbeddingParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of embedding:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 
 EMBEDP = EmbeddingParams()
 
@@ -56,14 +104,14 @@ EMBEDP = EmbeddingParams()
 class LSTMParams:
     def __init__(self):
         self.hidden_size = 128
-        self.num_classes = 80
+        self.num_classes = 1
         self.num_layers = 2
         self.drop_out = 0  # 0 for no drop out
 
-        self.num_epochs = 2
-        self.batchsize = 100
+        self.num_epochs = 600
+        self.batchsize = 10
         self.learning_rate = 0.001
-        self.weight_decay = 0.0
+        self.weight_decay = 0.0001
         self.use_gpu = True
 
     def show(self):
@@ -71,6 +119,13 @@ class LSTMParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of LSTM:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 LSTMP = LSTMParams()
 # LSTMP.show()
 
@@ -79,10 +134,10 @@ class MLPParams:
     def __init__(self):
         self.hidden_size = 128
         self.num_classes = 80
-        self.num_layers = 2
+        self.num_layers = 1
 
-        self.num_epochs = 2
-        self.batchsize = 100
+        self.num_epochs = 1
+        self.batchsize = 1
         self.learning_rate = 0.001
         self.weight_decay = 0.0001
         self.use_gpu = True
@@ -92,23 +147,39 @@ class MLPParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of MLP:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 MLPP = MLPParams()
 # MLPP.show()
 
 
+
 class LDAParams:
     def __init__(self):
-        self.cprpus_path = "/home1/yk/new_mimic_formal_data/"
-        self.mimic0_movie1 = 0  # 0 for mimic and 1 for movie
-        self.corpus_file = "selected_docs4LDA.csv"
+        self.corpus_path = "/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.mimic0_movie1_wiki2 = 0  # 0 for mimic; 1 for movie and 2 for wiki
+        self.corpus_file = "selected_docs4LDA.csv"#"selected_movie_review_docs4LDA.csv"#
         self.num_topic = 50
         self.plsa = False
+        self.corpus_percent = 1
 
     def show(self):
         print("Parameters of LDA used in this running are as follows:")
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of LDA:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 LDAP = LDAParams()
 # LDAP.show()
 
@@ -118,7 +189,7 @@ class LDARegParams:
 
         self.param_lda = 1.0
         self.param_alpha = 1.0
-        self.weight_decay = 0.0
+        self.weight_decay = 0.0001
 
         self.paramuptfreq = 20
         self.ldauptfreq = 50
@@ -128,24 +199,14 @@ class LDARegParams:
         for item in self.__dict__.items():
             print("%s: %s" % item)
         print("-----------------------------------------------")
+
+    def save_self(self, file_path, file_name):
+        with open(os.path.join(file_path, file_name), 'a+') as f:
+            f.write("----------Parameters of LDAReg:------------\n")
+            for item in self.__dict__.items():
+                f.write("%s: %s\n" % item)
+            f.write("-----------------------------------------------\n")
 ldaregP = LDARegParams()
 # ldaregP.show()
 
 
-class Run_Params:
-    def __init__(self):
-
-        self.mimic0_movie1 = 0  # 0 for mimic and 1 for movie
-        self.onehot0_embedding = 0   # 0 for onehot and 1-5 cbow/skipgram/fastCbow/fastSkipgram/glove
-        self.lm_lda_l2 = 0  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
-
-        self.save = True
-        self.save_path = "/home1/yk/experiments_TKDE/"
-        self.save_name = "test2epoch"
-
-    def show(self):
-        print("Parameters of this run used in this running are as follows:")
-        for item in self.__dict__.items():
-            print("%s: %s" % item)
-        print("-----------------------------------------------")
-runP = Run_Params()

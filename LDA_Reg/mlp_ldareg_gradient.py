@@ -59,17 +59,14 @@ def update_LDA_EM(alpha, responsibility_all_doc, weight, param_lda):
 
     return new_sita
 
-def train(train_x, train_y, test_x, test_y, lda_model):
+def train(train_x, train_y, lda_model, model_path):
     if train_x.ndim == 3:
         train_x = np.sum(train_x, axis=1, keepdims=False)
-        test_x = np.sum(test_x, axis=1, keepdims=False)
     train_size = train_x.shape[0]
     input_size = train_x.shape[-1]
-
     train_dataset = Data.TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
     train_loader = Data.DataLoader(dataset=train_dataset, batch_size=MLPP.batchsize, shuffle=True, num_workers=2)
-
-    net = Net(input_size, MLPP.hidden_size, MLPP.num_classes, MLPP.num_layers)
+    net = torch.load(model_path)
     if MLPP.use_gpu:
         net = net.cuda()
 
@@ -98,19 +95,17 @@ def train(train_x, train_y, test_x, test_y, lda_model):
     sita_dk = np.ones((MLPP.hidden_size, LDAP.num_topic)) * (1.0 / LDAP.num_topic)
     sita_dk = torch.from_numpy(sita_dk).float().cuda()
 
-    result_epoch = []
-    LDA_gradient = 0
-    r_DKN = 0
-    time_epoch = []
+    neuron_gradient = []
     for epoch in range(MLPP.num_epochs):
-        start_time = time.time()
-        extra_all = 0
         for i, data_iter in enumerate(train_loader, 0):
 
             # Convert numpy array to torch Variable
             data_x, data_y = data_iter
             TX = Variable(data_x).float()
             TY = Variable(data_y).float()
+            # # Convert numpy array to torch Variable
+            # TX = Variable(torch.from_numpy(train_x)).float()
+            # TY = Variable(torch.from_numpy(train_y)).float()
             if MLPP.use_gpu:
                 TX = TX.cuda()
                 TY = TY.cuda()
@@ -121,32 +116,26 @@ def train(train_x, train_y, test_x, test_y, lda_model):
             mlp_loss = criterion(output, TY)
             mlp_loss.backward()
 
-            for f_i, f in enumerate(list(net.parameters())):
+            param_list = list(net.parameters())
+            for f_i, f in enumerate(param_list):
+
                 if f_i == 0:
-                    if epoch < 2 or (i+1) % ldaregP.paramuptfreq == 0:
-                        r_DKN = calcResponsibility(sita_dk, phi_kw)
-                        LDA_gradient = calcRegGrad(sita_DK=sita_dk, phi_KW=phi_kw, weight=f.data)
+
+                    r_DKN = calcResponsibility(sita_dk, phi_kw)
+                    LDA_gradient = calcRegGrad(sita_DK=sita_dk, phi_KW=phi_kw, weight=f.data)
                     reg_grad_w = LDA_gradient / train_size / MLPP.num_classes
                     f.grad.data = f.grad.data + reg_grad_w * ldaregP.param_lda
+                    sita_dk = update_LDA_EM(alpha=alpha, responsibility_all_doc=r_DKN, weight=f.data, param_lda=ldaregP.param_lda)
 
-                    if epoch < 2 or (i+1) % ldaregP.ldauptfreq == 0:
-                        if epoch >= 2 and (i+1) % ldaregP.paramuptfreq != 0:
-                            r_DKN = calcResponsibility(sita_dk, phi_kw)
-                        sita_dk = update_LDA_EM(alpha=alpha, responsibility_all_doc=r_DKN, weight=f.data, param_lda=ldaregP.param_lda)
+                    x1 = torch.sigmoid(f.data.mm(torch.t(TX)) + param_list[f_i + 1].view(-1, 1))
+                    # print x1
+                    # print param_list[f_i + 1].size(), f.mm(torch.t(TX)).size(), x1.size()
+                    print f.grad.data
+                    x1_gradient = f.grad.data / (x1 * (1-x1) * TX)
+                    # print x1_gradient.size()
+                    neuron_gradient.append(x1_gradient.data.cpu().numpy().tolist())
 
             optimizer.step()
-            if MLPP.use_gpu:
-                acc_list, acc = get_accuracy_gpu(TY.data, output.data)
-            else:
-                acc_list, acc = get_accuracy(TY.data.numpy(), output.data.numpy())
-            if (i + 1) % 100 == 1:
-                print 'Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Acc: %.4f' % (epoch + 1, MLPP.num_epochs, i + 1, train_size / MLPP.batchsize, mlp_loss.data[0], acc)
-            # test model
-        consume_time = time.time() - start_time
-        time_epoch.append(consume_time)
-        auc_list, accuracy_mean, precision_mean, recall_mean, f1_mean = test(test_x, test_y, net, MLPP)
-        print 'Epoch [%d/%d], AUC:' % (epoch + 1, MLPP.num_epochs), auc_list[:4], 'ACC:', accuracy_mean, 'Precision:', precision_mean, 'Recall:', recall_mean, 'F1:', f1_mean
-        result_epoch.append([epoch + 1, auc_list, accuracy_mean, precision_mean, recall_mean, f1_mean])
 
-    return net, sita_dk.cpu().numpy(), result_epoch, np.array(time_epoch)
+    return net, sita_dk.cpu().numpy(), neuron_gradient
 

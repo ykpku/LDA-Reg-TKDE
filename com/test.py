@@ -6,7 +6,7 @@ from os import path
 import numpy as np
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 
-from utilities.metirc_utility import get_auc, get_auc_list, get_accuracy, get_precision_recall_f1
+from utilities.metric_utility import get_auc, get_auc_list, get_accuracy, get_precision_recall_f1
 
 def test(x_test, y_test, net, nnp, out_name=""):
     test_dataset = Data.TensorDataset(torch.from_numpy(x_test), torch.from_numpy(y_test))

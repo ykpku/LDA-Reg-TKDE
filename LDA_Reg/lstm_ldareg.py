@@ -13,7 +13,7 @@ sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 from params import ldaregP, LDAP, LSTMP
 from neural_networks.lstm_define import Net
 from com.test import test
-from utilities.metirc_utility import get_accuracy, get_accuracy_gpu
+from utilities.metric_utility import get_accuracy, get_accuracy_gpu
 
 def calcResponsibility(theta_alldoc, phi_KW):
     phi = torch.t(phi_KW)
@@ -136,3 +136,4 @@ def train(train_x, train_y, test_x, test_y, lda_model):
         result_epoch.append([epoch+1, auc_list, accuracy_mean, precision_mean, recall_mean, f1_mean])
 
     return net, sita_dk.cpu().numpy(), result_epoch, np.array(time_epoch)
+
