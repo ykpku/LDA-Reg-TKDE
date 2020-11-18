@@ -53,7 +53,7 @@ def __filter_events(all_events):
     return filter_event
 
 
-def get_sgns_embedding(name, sgns_idx2vec_path=LDAP.output_path):
+def get_sgns_embedding(name, sgns_idx2vec_path=LDAP.corpus_path):
     # if LDAP.mimic0_movie1_wiki2 == 0:
     #     name = "MIMIC"
     # elif LDAP.mimic0_movie1_wiki2 == 1:
