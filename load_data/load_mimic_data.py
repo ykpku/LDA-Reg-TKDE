@@ -51,16 +51,38 @@ def get_some_instance(file_path=MIMICP.mimic_data_path, seq_num=MIMICP.seq_num, 
     return x_data[:num], y_data[:num]
 
 def reload_mimic_embedding(train_percent=MIMICP.train_percent, valid=False, file_path=MIMICP.mimic_data_path, seq_num=MIMICP.seq_num, embedding_type=EMBEDP.embedding_type, veclen=EMBEDP.veclen, window=EMBEDP.window):
-    embedding_name = embedding_type + str(veclen) + '_window' + str(window)
+    if embedding_type == 'sg_add_sgns' or embedding_type == 'sg_cancat_sgns':
+        embedding_name = 'lda_sgns' + str(veclen) + '_window' + str(window)
+    else:
+        embedding_name = embedding_type + str(veclen) + '_window' + str(window)
     train_x = CsvUtility.read_array_from_csv(file_path, 'formal_train_x_seq_' + embedding_name + '.csv')
-    train_x = train_x.reshape((train_x.shape[0], seq_num, -1))
     train_y = CsvUtility.read_array_from_csv(file_path, 'formal_train_y_seq_' + embedding_name + '.csv')
     valid_x = CsvUtility.read_array_from_csv(file_path, 'formal_valid_x_seq_' + embedding_name + '.csv')
-    valid_x = valid_x.reshape((valid_x.shape[0], seq_num, -1))
     valid_y = CsvUtility.read_array_from_csv(file_path, 'formal_valid_y_seq_' + embedding_name + '.csv')
     test_x = CsvUtility.read_array_from_csv(file_path, 'formal_test_x_seq_' + embedding_name + '.csv')
-    test_x = test_x.reshape((test_x.shape[0], seq_num, -1))
     test_y = CsvUtility.read_array_from_csv(file_path, 'formal_test_y_seq_' + embedding_name + '.csv')
+    train_x = train_x.reshape((train_x.shape[0], seq_num, -1))
+    valid_x = valid_x.reshape((valid_x.shape[0], seq_num, -1))
+    test_x = test_x.reshape((test_x.shape[0], seq_num, -1))
+
+    if embedding_type == 'sg_add_sgns' or embedding_type == 'sg_cancat_sgns':
+        embedding_name = 'embedding_skipgram' + str(veclen) + '_window' + str(window)
+        train_x_sg = CsvUtility.read_array_from_csv(file_path, 'formal_train_x_seq_' + embedding_name + '.csv')
+        valid_x_sg = CsvUtility.read_array_from_csv(file_path, 'formal_valid_x_seq_' + embedding_name + '.csv')
+        test_x_sg = CsvUtility.read_array_from_csv(file_path, 'formal_test_x_seq_' + embedding_name + '.csv')
+        train_x_sg = train_x_sg.reshape((train_x_sg.shape[0], seq_num, -1))
+        valid_x_sg = valid_x_sg.reshape((valid_x_sg.shape[0], seq_num, -1))
+        test_x_sg = test_x_sg.reshape((test_x_sg.shape[0], seq_num, -1))
+
+        if embedding_type == 'sg_add_sgns':
+            train_x = train_x + train_x_sg
+            valid_x = valid_x + valid_x_sg
+            test_x = test_x + test_x_sg
+        if embedding_type == 'sg_cancat_sgns':
+            train_x = np.concatenate((train_x, train_x_sg), axis=2)
+            valid_x = np.concatenate((valid_x, valid_x_sg), axis=2)
+            test_x = np.concatenate((test_x, test_x_sg), axis=2)
+
     if valid:
         test_x = valid_x
         test_y = valid_y

@@ -87,7 +87,7 @@ def train(train_x, train_y, lda_model, model_path):
     other_param = filter(other_reltated, net.parameters())
     optimizer = torch.optim.Adam([{'params': input_related_param, 'weight_decay': 0.0}, {'params': other_param, 'weight_decay': MLPP.weight_decay}], lr=MLPP.learning_rate)
 
-    alpha, phi = lda_model.read_phi_alpha()
+    alpha, phi = lda_model.read_phi_alpha_theta()
     phi_kw = torch.from_numpy(phi).float().cuda()
 
     alpha = (alpha * ldaregP.param_alpha + 1)

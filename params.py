@@ -3,13 +3,13 @@ import os
 class Run_Params:
     def __init__(self):
 
-        self.mimic0_movie1_wiki2 = 0  # 0 for mimic and 1 for movie and 2 for wiki
-        self.onehot0_embedding = 0   # 0 for onehot and 1-5 cbow/skipgram/fastCbow/fastSkipgram/glove
-        self.lm_lda_l2 = 2  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
-        self.gpu = '1'
+        self.mimic0_movie1_wiki2 = 2  # 0 for mimic and 1 for movie and 2 for wiki
+        self.onehot0_embedding = 8   # 0 for onehot and 1-8 cbow/skipgram/fastCbow/fastSkipgram/glove/lda based skipgram/skipgram+SGNS/skipgram||SGNS
+        self.lm_lda_l2 = 1  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
+        self.gpu = '2'
         self.save = True
-        self.save_path = "/home1/yk/experiments_TKDE/"
-        self.save_name = "mimic_mlp_ldareg_1layer"
+        self.save_path = "/home1/yk/experiments_TKDE/major_revision/"
+        self.save_name = "movie_wiki_LSTM_SG_concat_ldaSGNS_l2_2layer"
 
     def show(self):
         print("Parameters of this run used in this running are as follows:")
@@ -56,7 +56,7 @@ class MovieParams:
         self.movie_data_path = "/home1/yk/Movie_Review_data/"
         self.feature_index_file = self.movie_data_path + "new_word2index.pkl"   # for training lda
         self.seq_num = 25
-        self.train_percent = 0.4
+        self.train_percent = 0.8
         self.num_words = 5229
 
     def show(self):
@@ -77,9 +77,11 @@ MOVIEP = MovieParams()
 
 class EmbeddingParams:
     def __init__(self):
-        names = ['embedding', 'embedding_skipgram', 'fasttext', 'fasttext_skipgram', 'glove']
+        names = ['embedding', 'embedding_skipgram', 'fasttext', 'fasttext_skipgram', 'glove', 'lda_sgns', 'sg_add_sgns', 'sg_cancat_sgns']
         self.embedding_type = names[runP.onehot0_embedding - 1]   # embedding/embedding_skipgram/fasttext/fasttext_skipgram/glove
         self.veclen = 500
+        # if self.embedding_type == 'sg_cancat_sgns':
+        #     self.veclen = self.veclen * 2
         self.window = 50
 
     def show(self):
@@ -111,7 +113,7 @@ class LSTMParams:
         self.num_epochs = 600
         self.batchsize = 10
         self.learning_rate = 0.001
-        self.weight_decay = 0.0001
+        self.weight_decay = 0.00001
         self.use_gpu = True
 
     def show(self):
@@ -133,13 +135,13 @@ LSTMP = LSTMParams()
 class MLPParams:
     def __init__(self):
         self.hidden_size = 128
-        self.num_classes = 80
-        self.num_layers = 1
+        self.num_classes = 1
+        self.num_layers = 2
 
-        self.num_epochs = 1
-        self.batchsize = 1
+        self.num_epochs = 600
+        self.batchsize = 10
         self.learning_rate = 0.001
-        self.weight_decay = 0.0001
+        self.weight_decay = 0.00001
         self.use_gpu = True
 
     def show(self):
@@ -161,12 +163,13 @@ MLPP = MLPParams()
 
 class LDAParams:
     def __init__(self):
-        self.corpus_path = "/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
-        self.mimic0_movie1_wiki2 = 0  # 0 for mimic; 1 for movie and 2 for wiki
-        self.corpus_file = "selected_docs4LDA.csv"#"selected_movie_review_docs4LDA.csv"#
+        self.corpus_path = "/home1/yk/wikipedia_dataset/filter"#"/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.mimic0_movie1_wiki2 = 2 # 0 for mimic; 1 for movie and 2 for wiki
+        self.corpus_file = "selected_movie_review_docs4LDA.csv"#"selected_docs4LDA.csv"#"selected_movie_review_docs4LDA.csv"#
         self.num_topic = 50
         self.plsa = False
         self.corpus_percent = 1
+        self.output_path = "/home1/yk/experiments_TKDE/major_revision/"#"/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
 
     def show(self):
         print("Parameters of LDA used in this running are as follows:")

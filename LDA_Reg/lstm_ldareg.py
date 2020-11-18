@@ -78,7 +78,7 @@ def train(train_x, train_y, test_x, test_y, lda_model):
     optimizer = torch.optim.Adam([{'params': input_related_param, 'weight_decay': 0.0}, {'params': other_param, 'weight_decay': LSTMP.weight_decay}], lr=LSTMP.learning_rate)
 
     # lda result
-    alpha, phi = lda_model.read_phi_alpha()
+    alpha, phi = lda_model.read_phi_alpha_theta()
     phi_kw = torch.from_numpy(phi).float().cuda()
     # alpha learned from lda is less than 1, and lead to nan in regularization gradient
     alpha = (alpha * ldaregP.param_alpha + 1)
