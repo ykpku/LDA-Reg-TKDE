@@ -11,7 +11,7 @@ from pre_models.build_wikipedia_data import get_filter_data
 
 
 class LdaTools(object):
-    def __init__(self, doc_path, corpus_file, topic_num, PLSA, corpus_percent, output_path, mimic_movie_wiki):
+    def __init__(self, doc_path=LDAP.corpus_path, topic_num=LDAP.num_topic, PLSA=LDAP.plsa, corpus_file=LDAP.corpus_file, corpus_percent=LDAP.corpus_percent, output_path=LDAP.output_path, mimic_movie_wiki=LDAP.mimic0_movie1_wiki2):
         self.doc_path = doc_path
         self.topic_num = topic_num
         self.dictionary = []
