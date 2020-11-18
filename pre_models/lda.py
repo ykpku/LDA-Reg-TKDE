@@ -145,8 +145,8 @@ class LdaTools(object):
             plsa = "_PLSA"
         if self.corpus_percent != 1.0:
             percent = "_" + str(self.corpus_percent)+"percent"
-        alpha = CsvUtility.read_array_from_csv(self.output_path, name+'alpha_' + str(self.topic_num) + plsa + percent + '.csv')
-        phi = CsvUtility.read_array_from_csv(self.output_path, name+'phi_' + str(self.topic_num) + plsa + percent + '.csv')
+        alpha = CsvUtility.read_array_from_csv(self.doc_path, name+'alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+        phi = CsvUtility.read_array_from_csv(self.doc_path, name+'phi_' + str(self.topic_num) + plsa + percent + '.csv')
         # theta = CsvUtility.read_array_from_csv(self.output_path, name+'theta_' + str(self.topic_num) + plsa + percent + '.csv')
         return alpha, phi
 
