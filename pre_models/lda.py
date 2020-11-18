@@ -145,18 +145,18 @@ class LdaTools(object):
             plsa = "_PLSA"
         if self.corpus_percent != 1.0:
             percent = "_" + str(self.corpus_percent)+"percent"
-        alpha = CsvUtility.read_array_from_csv(self.output_path, name+'_alpha_' + str(self.topic_num) + plsa + percent + '.csv')
-        phi = CsvUtility.read_array_from_csv(self.output_path, name+'_phi_' + str(self.topic_num) + plsa + percent + '.csv')
-        theta = CsvUtility.read_array_from_csv(self.output_path, name+'_theta_' + str(self.topic_num) + plsa + percent + '.csv')
-        return alpha, phi, theta
+        alpha = CsvUtility.read_array_from_csv(self.output_path, name+'alpha_' + str(self.topic_num) + plsa + percent + '.csv')
+        phi = CsvUtility.read_array_from_csv(self.output_path, name+'phi_' + str(self.topic_num) + plsa + percent + '.csv')
+        # theta = CsvUtility.read_array_from_csv(self.output_path, name+'theta_' + str(self.topic_num) + plsa + percent + '.csv')
+        return alpha, phi
 
     def read_phi_alpha_theta(self):
         if self.mimic_movie_wiki == 0:
-            return self.__read_phi_alpha_theta_byname("MIMIC")
+            return self.__read_phi_alpha_theta_byname("")
         elif self.mimic_movie_wiki == 1:
-            return self.__read_phi_alpha_theta_byname("MovieReview")
+            return self.__read_phi_alpha_theta_byname("MovieReview_")
         else:
-            return self.__read_phi_alpha_theta_byname("Wiki")
+            return self.__read_phi_alpha_theta_byname("Wiki_")
 
     def read_topic_distrib(self):
         if self.mimic_movie_wiki == 0:
@@ -199,3 +199,7 @@ class LdaTools(object):
 #     # print lt.get_alpha()
 #     # lt.get_topic_distrib_of_word()
 #     pass
+
+
+
+
