@@ -110,15 +110,15 @@ def train(train_x, train_y, test_x, test_y, lda_model):
 
             for f_i, f in enumerate(list(net.parameters())):
                 if f_i == 0:
-                    if epoch < 2 or (i + 1) % ldaregP.paramuptfreq == 0:
+                    if epoch < ldaregP.fullsteps or (i + 1) % ldaregP.paramuptfreq == 0:
                         r_DKN = calcResponsibility(sita_dk, phi_kw)
                         LDA_gradient = calcRegGrad(sita_DK=sita_dk, phi_KW=phi_kw, weight=f.data)
 
                     reg_grad_w = LDA_gradient / train_size / LSTMP.num_classes
                     f.grad.data = f.grad.data + reg_grad_w * ldaregP.param_lda
 
-                    if epoch < 2 or (i + 1) % ldaregP.ldauptfreq == 0:
-                        if epoch >= 2 and (i + 1) % ldaregP.paramuptfreq != 0:
+                    if epoch < ldaregP.fullsteps or (i + 1) % ldaregP.ldauptfreq == 0:
+                        if epoch >= ldaregP.fullsteps and (i + 1) % ldaregP.paramuptfreq != 0:
                             r_DKN = calcResponsibility(sita_dk, phi_kw)
                         sita_dk = update_LDA_EM(alpha=alpha, responsibility_all_doc=r_DKN, weight=f.data, param_lda=ldaregP.param_lda)
             optimizer.step()

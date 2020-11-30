@@ -3,13 +3,13 @@ import os
 class Run_Params:
     def __init__(self):
 
-        self.mimic0_movie1_wiki2 = 2  # 0 for mimic and 1 for movie and 2 for wiki
-        self.onehot0_embedding = 8   # 0 for onehot and 1-8 cbow/skipgram/fastCbow/fastSkipgram/glove/lda based skipgram/skipgram+SGNS/skipgram||SGNS
-        self.lm_lda_l2 = 1  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
+        self.mimic0_movie1_wiki2 = 0  # 0 for mimic and 1 for movie and 2 for wiki
+        self.onehot0_embedding = 0   # 0 for onehot and 1-8 cbow/skipgram/fastCbow/fastSkipgram/glove/lda based skipgram/skipgram+SGNS/skipgram||SGNS
+        self.lm_lda_l2 = 2  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
         self.gpu = '2'
         self.save = True
         self.save_path = "/home1/yk/experiments_TKDE/major_revision/"
-        self.save_name = "movie_wiki_LSTM_SG_concat_ldaSGNS_l2_2layer"
+        self.save_name = "movie_mlp_ldareg_1layer_0.8_sparse"
 
     def show(self):
         print("Parameters of this run used in this running are as follows:")
@@ -106,14 +106,14 @@ EMBEDP = EmbeddingParams()
 class LSTMParams:
     def __init__(self):
         self.hidden_size = 128
-        self.num_classes = 1
+        self.num_classes = 80
         self.num_layers = 2
         self.drop_out = 0  # 0 for no drop out
 
-        self.num_epochs = 600
-        self.batchsize = 10
+        self.num_epochs = 2
+        self.batchsize = 100
         self.learning_rate = 0.001
-        self.weight_decay = 0.00001
+        self.weight_decay = 0.0001
         self.use_gpu = True
 
     def show(self):
@@ -135,13 +135,14 @@ LSTMP = LSTMParams()
 class MLPParams:
     def __init__(self):
         self.hidden_size = 128
-        self.num_classes = 1
-        self.num_layers = 2
+        self.num_classes = 80
+        self.num_layers = 1
+        self.sparse_update = False
 
-        self.num_epochs = 600
-        self.batchsize = 10
+        self.num_epochs = 1
+        self.batchsize = 1
         self.learning_rate = 0.001
-        self.weight_decay = 0.00001
+        self.weight_decay = 0.0001
         self.use_gpu = True
 
     def show(self):
@@ -163,13 +164,13 @@ MLPP = MLPParams()
 
 class LDAParams:
     def __init__(self):
-        self.corpus_path = "/home1/yk/wikipedia_dataset/filter"#"/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
-        self.mimic0_movie1_wiki2 = 2 # 0 for mimic; 1 for movie and 2 for wiki
-        self.corpus_file = "selected_movie_review_docs4LDA.csv"#"selected_docs4LDA.csv"#"selected_movie_review_docs4LDA.csv"#
+        self.corpus_path = "/home1/yk/new_mimic_formal_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.mimic0_movie1_wiki2 = 0  # 0 for mimic; 1 for movie and 2 for wiki
+        self.corpus_file = "selected_docs4LDA.csv"  #"selected_docs4LDA.csv""selected_movie_review_docs4LDA.csv"#
         self.num_topic = 50
         self.plsa = False
         self.corpus_percent = 1
-        self.output_path = "/home1/yk/experiments_TKDE/major_revision/"#"/home1/yk/new_mimic_formal_data/"#"/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.output_path = "/home1/yk/new_mimic_formal_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
 
     def show(self):
         print("Parameters of LDA used in this running are as follows:")
@@ -194,8 +195,9 @@ class LDARegParams:
         self.param_alpha = 1.0
         self.weight_decay = 0.0001
 
-        self.paramuptfreq = 20
-        self.ldauptfreq = 50
+        self.paramuptfreq = 20  # I_param
+        self.ldauptfreq = 50   # I_lda
+        self.fullsteps = 2   # E
 
     def show(self):
         print("Parameters of LDAReg used in this running are as follows:")
@@ -211,6 +213,7 @@ class LDARegParams:
             f.write("-----------------------------------------------\n")
 ldaregP = LDARegParams()
 # ldaregP.show()
+
 
 
 

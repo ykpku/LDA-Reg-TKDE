@@ -13,6 +13,7 @@ from pre_models import lda
 from utilities.csv_utility import CsvUtility
 os.environ["CUDA_VISIBLE_DEVICES"] = '3'
 
+# have some bugs, correct in cluster_neuron_topics
 def get_list_sort_index(data_list, pre_max_count):
     index_dict = {}
     # print 'original data length:', len(data_list)

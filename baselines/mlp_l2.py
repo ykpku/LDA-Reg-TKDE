@@ -26,7 +26,7 @@ def train(train_x, train_y, test_x, test_y):
     train_dataset = Data.TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
     train_loader = Data.DataLoader(dataset=train_dataset, batch_size=MLPP.batchsize, shuffle=True, num_workers=2)
 
-    net = Net(input_size, MLPP.hidden_size, MLPP.num_classes, MLPP.num_layers)
+    net = Net(input_size, MLPP.hidden_size, MLPP.num_classes, MLPP.num_layers, sparse=MLPP.sparse_update)
     if MLPP.use_gpu:
         net = net.cuda()
 
