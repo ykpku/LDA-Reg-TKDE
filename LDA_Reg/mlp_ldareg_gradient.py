@@ -111,7 +111,7 @@ def train(train_x, train_y, lda_model, model_path):
     phi_kw = torch.from_numpy(phi).float().cuda()
     alpha = (alpha * ldaregP.param_alpha + 1)
     alpha = torch.from_numpy(alpha.flatten()).float().cuda()
-    sita_dk = np.ones((MLPP.hidden_size, LDAP.num_topic)) * (1.0 / LDAP.num_topic)
+    sita_dk = np.ones((MLPP.hidden_size, lda_model.topic_num)) * (1.0 / lda_model.topic_num)
     sita_dk = torch.from_numpy(sita_dk).float().cuda()
 
     neuron_gradient = []

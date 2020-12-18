@@ -1,15 +1,16 @@
+
 import os
 
 class Run_Params:
     def __init__(self):
 
-        self.mimic0_movie1_wiki2 = 0  # 0 for mimic and 1 for movie and 2 for wiki
+        self.mimic0_movie1_wiki2 = 1  # 0 for mimic and 1 for movie and 2 for wiki
         self.onehot0_embedding = 0   # 0 for onehot and 1-8 cbow/skipgram/fastCbow/fastSkipgram/glove/lda based skipgram/skipgram+SGNS/skipgram||SGNS
         self.lm_lda_l2 = 2  # 0 for lstm+ldareg; 1 for lstm+l2; 2 for mlp+ldareg; 3 for mlp+l2
-        self.gpu = '2'
+        self.gpu = '0'
         self.save = True
         self.save_path = "/home1/yk/experiments_TKDE/major_revision/"
-        self.save_name = "movie_mlp_ldareg_1layer_0.8_sparse"
+        self.save_name = "movie_mlp_ldareg_1layer_0.8_sparse_run_alone_test"
 
     def show(self):
         print("Parameters of this run used in this running are as follows:")
@@ -135,12 +136,12 @@ LSTMP = LSTMParams()
 class MLPParams:
     def __init__(self):
         self.hidden_size = 128
-        self.num_classes = 80
+        self.num_classes = 1
         self.num_layers = 1
-        self.sparse_update = False
+        self.sparse_update = True
 
-        self.num_epochs = 1
-        self.batchsize = 1
+        self.num_epochs = 600
+        self.batchsize = 10
         self.learning_rate = 0.001
         self.weight_decay = 0.0001
         self.use_gpu = True
@@ -164,13 +165,13 @@ MLPP = MLPParams()
 
 class LDAParams:
     def __init__(self):
-        self.corpus_path = "/home1/yk/new_mimic_formal_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
-        self.mimic0_movie1_wiki2 = 0  # 0 for mimic; 1 for movie and 2 for wiki
-        self.corpus_file = "selected_docs4LDA.csv"  #"selected_docs4LDA.csv""selected_movie_review_docs4LDA.csv"#
-        self.num_topic = 50
+        self.corpus_path = "/home1/yk/Movie_Review_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.mimic0_movie1_wiki2 = 1  # 0 for mimic; 1 for movie and 2 for wiki
+        self.corpus_file = "selected_movie_review_docs4LDA.csv"  #"selected_docs4LDA.csv""selected_movie_review_docs4LDA.csv"#
+        self.num_topic = 200
         self.plsa = False
         self.corpus_percent = 1
-        self.output_path = "/home1/yk/new_mimic_formal_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
+        self.output_path = "/home1/yk/Movie_Review_data/"  #"/home1/yk/new_mimic_formal_data/""/home1/yk/Movie_Review_data/"#"/home1/yk/wikipedia_dataset/filter"##"
 
     def show(self):
         print("Parameters of LDA used in this running are as follows:")
@@ -191,13 +192,13 @@ LDAP = LDAParams()
 class LDARegParams:
     def __init__(self):
 
-        self.param_lda = 1.0
+        self.param_lda = 0.001
         self.param_alpha = 1.0
         self.weight_decay = 0.0001
 
         self.paramuptfreq = 20  # I_param
         self.ldauptfreq = 50   # I_lda
-        self.fullsteps = 2   # E
+        self.fullsteps = 10   # E
 
     def show(self):
         print("Parameters of LDAReg used in this running are as follows:")

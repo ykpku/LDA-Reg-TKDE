@@ -2,25 +2,23 @@ from os import path
 import torch.nn as nn
 import sys
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
-from neural_networks.SparseLinearModule import SparseLinearModule
+
 
 
 class Net(nn.Module):
-    def __init__(self, input_size, hidden_size, num_classes, num_layer, sparse=False):
+    def __init__(self, input_size, hidden_size, num_classes, num_layer):
         super(Net, self).__init__()
-        if sparse:
-            self.fc1 = SparseLinearModule(input_size, hidden_size, bias=True)
-        else:
-            self.fc1 = nn.Linear(input_size, hidden_size, bias=True)
+        self.fc1 = nn.Linear(input_size, hidden_size, bias=True)
         self.sig = nn.Sigmoid()
         self.num_layer = num_layer
 
-        if self.num_layer == 2:
-            if sparse:
-                self.fc3 = SparseLinearModule(hidden_size, hidden_size, bias=True)
-            else:
-                self.fc3 = nn.Linear(hidden_size, hidden_size, bias=True)
 
+        # self.hidden_list = []
+        # self.num_layer = num_layer
+        # for i in range(self.num_layer-1):
+        #     self.hidden_list.append(nn.Linear(hidden_size, hidden_size, bias=True))
+        if self.num_layer == 2:
+            self.fc3 = nn.Linear(hidden_size, hidden_size, bias=True)
         self.fc2 = nn.Linear(hidden_size, num_classes, bias=True)
         self.sig_o = nn.Sigmoid()
 

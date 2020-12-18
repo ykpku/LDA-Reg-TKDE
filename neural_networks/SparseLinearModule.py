@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.autograd.function as Function
 import sys
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
-from neural_networks.sparse_input_layer import SparseLinear
+from neural_networks.sparse_input_layer_GPU import SparseLinear
 
 
 class SparseLinearModule(nn.Module):

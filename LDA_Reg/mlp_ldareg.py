@@ -11,7 +11,8 @@ import time
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 
 from params import MLPP, ldaregP, LDAP
-from neural_networks.mlp_define import Net
+# from neural_networks.mlp_define import Net
+from neural_networks.mlp_hook_define import Net
 from com.test import test
 from utilities.metric_utility import get_accuracy, get_accuracy_gpu
 
@@ -68,6 +69,7 @@ def train(train_x, train_y, test_x, test_y, lda_model):
 
     train_dataset = Data.TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
     train_loader = Data.DataLoader(dataset=train_dataset, batch_size=MLPP.batchsize, shuffle=True, num_workers=2)
+
 
     net = Net(input_size, MLPP.hidden_size, MLPP.num_classes, MLPP.num_layers, sparse=MLPP.sparse_update)
     if MLPP.use_gpu:

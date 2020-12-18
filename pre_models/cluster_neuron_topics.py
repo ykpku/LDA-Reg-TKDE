@@ -5,7 +5,10 @@ import numpy as np
 from sklearn import preprocessing
 import pandas as pd
 from sklearn.cluster import SpectralClustering
+from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
+import time
+import random
 sys.path.append(path.split(path.abspath(path.dirname(__file__)))[0])
 
 from load_data.load_mimic_data import get_some_instance
@@ -13,6 +16,7 @@ from LDA_Reg import mlp_ldareg_gradient
 from pre_models import lda
 from utilities.csv_utility import CsvUtility
 os.environ["CUDA_VISIBLE_DEVICES"] = '3'
+
 
 def look_neurons(path, file_name):
     neuron_grad = []
@@ -53,9 +57,9 @@ def get_neuron_label_count(train_y, neurons_gradient, max_neuron_num=3):
                 neurons_label_dict[n_id] = n_labels
     return neurons_label_dict
 
-def run_interpretation(base_path="/home1/yk/experiments_TKDE/major_revision/", model_file="#2020-11-21 03_33_04#_lstm_model_mimic_mlp_ldareg_1layer_0.8.pkl", num=10, neuron_num=3):
+def run_interpretation(base_path="/home1/yk/experiments_TKDE/major_revision/", model_file="#2020-11-21 03_33_04#_lstm_model_mimic_mlp_ldareg_1layer_0.8.pkl", num=10, neuron_num=3, topic_num=50):
     train_x, train_y = get_some_instance(num=num)
-    lda_tool = lda.LdaTools()
+    lda_tool = lda.LdaTools(topic_num=topic_num)
     net, sita, neuron_gradient = mlp_ldareg_gradient.train(train_x, train_y, lda_tool, path.join(base_path, model_file))
     neuron_gradient = np.abs(np.array(neuron_gradient))
     # print(neuron_gradient.shape)
@@ -66,16 +70,16 @@ def run_interpretation(base_path="/home1/yk/experiments_TKDE/major_revision/", m
 
 def test_patient_topneurons():
     need_results = []
-    for p_i in range(50, 1000, 50):
+    for p_i in [100000]:
         for n_i in range(2, 50, 2):
-            if len(run_interpretation(num=p_i, neuron_num=n_i)) >= 128:
+            if len(run_interpretation(num=p_i, neuron_num=n_i, model_file="#2020-11-30 22_36_35#_lstm_model_mimic_mlp_ldareg_1layer_0.8_topic20.pkl")) >= 128:
                 print("need patient:", p_i)
                 need_results.append(str(p_i) + "====" + str(n_i))
                 break
     print(need_results)
 
-def get_neron_labels(base_path, model_file, top_n_label, patient_num, neuron_num):
-    neuron_label_count = run_interpretation(base_path=base_path, model_file=model_file, num=patient_num, neuron_num=neuron_num)
+def get_neron_labels(base_path, model_file, top_n_label, patient_num, neuron_num, topic_num):
+    neuron_label_count = run_interpretation(base_path=base_path, model_file=model_file, num=patient_num, neuron_num=neuron_num, topic_num=topic_num)
     neuron_labels = {}
     neuron_vals = {}
     for n_key, n_val in neuron_label_count.items():
@@ -96,7 +100,7 @@ def cluster_neurons(neuron_labels, base_path="/home1/yk/experiments_TKDE/major_r
     sita = CsvUtility.read_array_from_csv(base_path, sita_file)
     # print(sita[:3])
     # print(sita.shape)
-    sc = SpectralClustering(cluster_num,  assign_labels='discretize', random_state=0)
+    sc = SpectralClustering(cluster_num,  assign_labels='discretize', random_state=random.randint(0,10))
     sc.fit(sita)
     # print(sc.labels_)
     label_cluster_matrix = np.zeros((80, cluster_num))
@@ -125,22 +129,81 @@ def cal_F1(label_cluster_matrix, neuron_num, cluster_re):
     for cri, c in enumerate(cluster_re):
         nj[0][c] += 1
     ni = np.sum(label_cluster_matrix, axis=1, keepdims=True)
-    recall_matrix = label_cluster_matrix / nj
+    recall_matrix = label_cluster_matrix / (nj + 1e-15)
     precision_matrix = label_cluster_matrix / (ni + 1e-15)
     fij = 2 * precision_matrix * recall_matrix / (precision_matrix + recall_matrix + 1e-15)
     F = np.sum(ni * np.max(fij, axis=1, keepdims=True)) / neuron_num
     print("F1 :", F)
     return F
 
-base_path = "/home1/yk/experiments_TKDE/major_revision/"
-model_file = "#2020-11-21 03_33_04#_lstm_model_mimic_mlp_ldareg_1layer_0.8.pkl"
-sita_file = "#2020-11-21 03_33_04#_sita_mimic_mlp_ldareg_1layer_0.8.csv"
-r1, r2 = get_neron_labels(base_path=base_path, model_file=model_file, top_n_label=2, patient_num=100, neuron_num=10)
-if len(r1) < 128:
-    print("not cover all neurons !")
-else:
-    for tn in [2, 5, 10, 20, 30]:
-        label_cluster_matrix, cluster_re = cluster_neurons(neuron_labels=r1, base_path=base_path, sita_file=sita_file, cluster_num=tn)
-        cal_class_entropy(label_cluster_matrix=label_cluster_matrix, neuron_num=128)
-        cal_F1(label_cluster_matrix=label_cluster_matrix, neuron_num=128, cluster_re=cluster_re)
+def cal_common_label_ratio(neuron_labels, base_path="/home1/yk/experiments_TKDE/major_revision/", sita_file="#2020-11-21 03_33_04#_sita_mimic_mlp_ldareg_1layer_0.8.csv"):
+    sita = CsvUtility.read_array_from_csv(base_path, sita_file)
+    sita_cos_sim = cosine_similarity(sita)
+    consistent_neurons_num = 0
+    for neuron_i, neuron_sims in enumerate(sita_cos_sim):
+        top_k, top_v = get_list_sort_index(neuron_sims, 4)
+        top_k_label_count = {}
+        for top_k_i in top_k:
+            k_i_labels = neuron_labels[top_k_i]
+            for l in k_i_labels:
+                top_k_label_count[l] = top_k_label_count.setdefault(l, 0) + 1
+        for label_count_val in top_k_label_count.values():
+            if label_count_val >= 3:
+                consistent_neurons_num += 1
+                break
+    return consistent_neurons_num, consistent_neurons_num * 1.0 / len(neuron_labels)
 
+
+
+def run():
+    base_path = "/home1/yk/experiments_TKDE/major_revision/"
+    # model_file = "#2020-11-21 03_33_04#_lstm_model_mimic_mlp_ldareg_1layer_0.8.pkl"
+    # sita_file = "#2020-11-21 03_33_04#_sita_mimic_mlp_ldareg_1layer_0.8.csv"
+    # time_prefix_list = ['#2020-11-29 15_28_25#', '#2020-11-29 15_26_23#', '#2020-11-29 15_26_31#', '#2020-11-29 15_28_09#', '#2020-11-29 15_30_14#']
+    # topic_list = ['20', '50', '100', '200', '500']
+    time_prefix_list = ['#2020-11-30 22_36_35#', '#2020-11-30 22_36_56#', '#2020-11-30 22_03_35#', '#2020-11-30 22_04_03#', '#2020-11-30 22_09_12#']
+    topic_list = [20, 50, 100, 200, 500]
+    model_file_name = '_lstm_model_mimic_mlp_ldareg_1layer_0.8_topic'
+    sita_file_name = '_sita_mimic_mlp_ldareg_1layer_0.8_topic'
+    entropy_matrix = []
+    F1_matrix = []
+    # common_label_ratio_matrix = []
+
+    neuron_num = 10
+    mean_f1 = 0.0
+    while mean_f1 <= 0.599:
+        for i in [2]:
+            model_file = time_prefix_list[i] + model_file_name + str(topic_list[i]) + '.pkl'
+            sita_file = time_prefix_list[i] + sita_file_name + str(topic_list[i]) + '.csv'
+            # model_file = "#2020-11-21 03_33_04#_lstm_model_mimic_mlp_ldareg_1layer_0.8.pkl"
+            # sita_file = "#2020-11-21 03_33_04#_sita_mimic_mlp_ldareg_1layer_0.8.csv"
+            r1, r2 = get_neron_labels(base_path=base_path, model_file=model_file, top_n_label=2, patient_num=100000, neuron_num=neuron_num, topic_num=topic_list[i])
+            while len(r1) < 128:
+                print("not cover all neurons !")
+                neuron_num += 2
+                r1, r2 = get_neron_labels(base_path=base_path, model_file=model_file, top_n_label=2, patient_num=100000, neuron_num=neuron_num, topic_num=topic_list[i])
+
+            entropy_cluster = [topic_list[i]]
+            f1_cluster = [topic_list[i]]
+            common_label_ratio = [topic_list[i]]
+            for tn in [2, 5, 10, 20, 30]:
+                label_cluster_matrix, cluster_re = cluster_neurons(neuron_labels=r1, base_path=base_path, sita_file=sita_file, cluster_num=tn)
+                cce = cal_class_entropy(label_cluster_matrix=label_cluster_matrix, neuron_num=128)
+                cf = cal_F1(label_cluster_matrix=label_cluster_matrix, neuron_num=128, cluster_re=cluster_re)
+                entropy_cluster.append(cce)
+                f1_cluster.append(cf)
+                mean_f1 += cf
+            entropy_matrix.append(entropy_cluster)
+            mean_f1 /= 5.0
+            F1_matrix.append(f1_cluster)
+            # common_count, common_ratio = cal_common_label_ratio(neuron_labels=r1, base_path=base_path, sita_file=sita_file)
+            # common_label_ratio.append(common_count)
+            # common_label_ratio.append(common_ratio)
+            # common_label_ratio_matrix.append(common_label_ratio)
+    time_code = '#' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '#_'
+    CsvUtility.write_array2csv(entropy_matrix, base_path, time_code + "class_entropy_pa100000_topneu10_toplab2_tuneTopic100.csv")
+    CsvUtility.write_array2csv(F1_matrix, base_path, time_code + "f1_pa100000_topneu10_toplab2_tuneTopic100.csv")
+    # CsvUtility.write_array2csv(common_label_ratio_matrix, base_path, time_code + "common_ratio_pa100000_topneu10_toplab2_tuneTopic100.csv")
+
+run()
+# test_patient_topneurons()

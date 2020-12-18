@@ -36,11 +36,11 @@ class CsvUtility(object):
         return len(raw_dict)
 
     @staticmethod
-    def write_array2csv(raw_array, csv_path, file_name, type='float'):
+    def write_array2csv(raw_array, csv_path, file_name, type='float', index=None, header=None, index_label=None):
         np_raw = np.array(raw_array)
         if np_raw.ndim == 1:
             np_raw = np_raw.reshape((len(np_raw), -1))
-        pd.DataFrame(np_raw).to_csv(os.path.join(csv_path, file_name), index=None, header=None)
+        pd.DataFrame(np_raw, index=index).to_csv(os.path.join(csv_path, file_name), index=True, index_label=index_label, header=header)
 
     @staticmethod
     def write_norm_array2csv(raw_array, csv_path, file_name, sep=' '):

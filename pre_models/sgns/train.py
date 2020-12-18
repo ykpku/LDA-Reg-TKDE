@@ -68,10 +68,15 @@ def train(args):
     weights = ws if args.weights else None
 
     model = Word2Vec(vocab_size=vocab_size, embedding_size=EMBEDP.veclen)
+    time_code = '_#' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '#'
     sgns = SGNS(embedding=model, vocab_size=vocab_size, n_negs=args.n_negs, weights=weights)
     if args.cuda:
         sgns = sgns.cuda()
     optim = Adam(sgns.parameters())
+    test_data = pickle.load(open(os.path.join(LDAP.output_path, name + '_train.dat'), 'rb'))
+    # for iword, oword in test_data:
+    #     print(iword, type(iword))
+    #     print(oword, type(oword))
 
     for epoch in range(1, args.epoch + 1):
         dataset = PermutedSubsampledCorpus(os.path.join(LDAP.output_path, name + '_train.dat'))
